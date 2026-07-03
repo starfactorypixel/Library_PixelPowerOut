@@ -6,5 +6,5 @@
 	  "type": "git",
 	  "url": "https://github.com/starfactorypixel/Library_PixelPowerOut.git"
 	},
-	"headers": "PowerOut.h"
+	"headers": ["PowerOut.h", "PowerOutV2.h"]
 }
