@@ -2,8 +2,15 @@
 #include <inttypes.h>
 #include <string.h>
 
+class PowerOutBase
+{
+	public:
+		enum mode_t : uint8_t { MODE_NONE, MODE_OFF, MODE_ON, MODE_PWM, MODE_BLINK, MODE_DELAY_OFF };
+		enum state_t : uint8_t { STATE_NONE, STATE_OFF, STATE_ON };
+};
+
 template <uint8_t _ports_max, uint16_t _tick_time = 10> 
-class PowerOutV2
+class PowerOutV2 : public PowerOutBase
 {
 	//static constexpr uint8_t _ports_max = 8;
 	//static constexpr uint16_t _tick_time = 10;
@@ -14,9 +21,6 @@ class PowerOutV2
 	using callback_current_limit_t = void (*)(uint8_t port, uint16_t current);
 	
 	public:
-		
-		enum mode_t : uint8_t { MODE_NONE, MODE_OFF, MODE_ON, MODE_PWM, MODE_BLINK, MODE_DELAY_OFF };
-		enum state_t : uint8_t { STATE_NONE, STATE_OFF, STATE_ON };
 		
 		PowerOutV2(tick_provider tick, callback_control_t control, callback_current_t current) : _Tick(tick), _CallbackControl(control), _CallbackCurrent(current)
 		{
@@ -176,6 +180,12 @@ class PowerOutV2
 				CtrlOn(port);
 			
 			return;
+		}
+		
+		// Получить кол-во портов
+		uint8_t GetPortCount()
+		{
+			return _ports_max;
 		}
 		
 		// Получить значение тока порта
