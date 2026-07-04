@@ -16,8 +16,8 @@ class PowerOutV2 : public PowerOutBase
 	//static constexpr uint16_t _tick_time = 10;
 	
 	using tick_provider = uint32_t (*)();
-	using callback_control_t = void (*)(uint8_t id, uint8_t state);
-	using callback_current_t = uint16_t (*)(uint8_t id);
+	using callback_control_t = void (*)(uint8_t port, uint8_t id, uint8_t state);
+	using callback_current_t = uint16_t (*)(uint8_t port, uint8_t id);
 	using callback_current_limit_t = void (*)(uint8_t port, uint16_t current);
 	
 	public:
@@ -39,6 +39,7 @@ class PowerOutV2 : public PowerOutBase
 			if(--port >= _ports_max) return;
 			
 			channel_t &channel = _channels[port];
+			channel.port = (port + 1);
 			channel.control_id = control_id;
 			channel.current_id = current_id;
 			channel.current_limit = current_limit;
@@ -152,12 +153,12 @@ class PowerOutV2 : public PowerOutBase
 				case MODE_BLINK:
 				case MODE_DELAY_OFF:
 				{
-					CtrlOff(++port);
+					CtrlOff(channel.port);
 					break;
 				}
 				case MODE_OFF:
 				{
-					CtrlOn(++port);
+					CtrlOn(channel.port);
 					break;
 				}
 				default:
@@ -244,7 +245,6 @@ class PowerOutV2 : public PowerOutBase
 			
 			for(uint8_t i = 0; i < _ports_max; ++i)
 			{
-				uint8_t port = i + 1;
 				channel_t &channel = _channels[i];
 				
 				if(channel.mode <= MODE_OFF) continue;
@@ -257,7 +257,7 @@ class PowerOutV2 : public PowerOutBase
 						_CallControl(channel, STATE_OFF);
 						
 						if(_CallbackCurrentLimit != nullptr)
-							_CallbackCurrentLimit(port, current);
+							_CallbackCurrentLimit(channel.port, current);
 					}
 				}
 				
@@ -279,7 +279,7 @@ class PowerOutV2 : public PowerOutBase
 				
 				if(channel.mode == MODE_DELAY_OFF && current_time - channel.last_time >= channel.off_delay)
 				{
-					CtrlOff(port);
+					CtrlOff(channel.port);
 				}
 			}
 			
@@ -290,6 +290,7 @@ class PowerOutV2 : public PowerOutBase
 		
 		struct channel_t
 		{
+			uint8_t port;			// Номер порта, начиная с 1
 			uint8_t control_id;		// ID для управления портом в callback_control_t
 			uint8_t current_id;		// ID для чтения ADC в callback_current_t
 			uint16_t current_limit;	// Лимит тока порта, мА
@@ -312,7 +313,7 @@ class PowerOutV2 : public PowerOutBase
 		
 		void _CallControl(channel_t &channel, state_t state)
 		{
-			_CallbackControl(channel.control_id, state);
+			_CallbackControl(channel.port, channel.control_id, state);
 			channel.state = state;
 			
 			return;
@@ -320,7 +321,7 @@ class PowerOutV2 : public PowerOutBase
 		
 		uint16_t _CallCurrent(channel_t &channel)
 		{
-			uint16_t current = _CallbackCurrent(channel.current_id);
+			uint16_t current = _CallbackCurrent(channel.port, channel.current_id);
 			
 			return current;
 		}
