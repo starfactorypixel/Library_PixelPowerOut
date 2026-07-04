@@ -249,12 +249,12 @@ class PowerOutV2 : public PowerOutBase
 				
 				if(channel.mode <= MODE_OFF) continue;
 				
-				if(channel.current_limit > 0)
+				if(channel.state == STATE_ON && channel.current_limit > 0)
 				{
 					uint16_t current = _CallCurrent(channel);
 					if(_CheckCurrent(channel, current) == 1)
 					{
-						_CallControl(channel, STATE_OFF);
+						CtrlOff(channel.port);
 						
 						if(_CallbackCurrentLimit != nullptr)
 							_CallbackCurrentLimit(channel.port, current);
